@@ -1,108 +1,61 @@
-\# Aceest Fitness DevOps Project
+# Aceest Fitness DevOps Project
 
+## Overview
 
+This project demonstrates a DevOps CI/CD pipeline for ACEest Fitness & Gym.
 
-This project demonstrates a simple Python application with a DevOps pipeline.
+## Technologies Used
 
+- Python
+- Flask
+- Docker
+- Git
+- GitHub
+- GitHub Actions
+- Pytest
+- Jenkins
 
-
-\## Technologies Used
-
-
-
-\- Python
-
-\- Flask
-
-\- Docker
-
-\- Git
-
-\- GitHub
-
-\- GitHub Actions
-
-\- Pytest
-
-
-
-\## Project Structure
-
-
+## Project Structure
 
 aceest-fitness/
-
 │
-
 ├── app.py
-
-├── test\_app.py
-
+├── test_app.py
 ├── requirements.txt
-
 ├── Dockerfile
-
 ├── README.md
-
 ├── versions/
 
+## Running the Application
 
+pip install -r requirements.txt  
+python app.py  
 
-\## Running the Application
+Open in browser:  
+http://localhost:5000  
 
+## Running Tests
 
+pytest  
 
-Install dependencies:
+## Docker
 
+docker build -t aceest-app .  
+docker run -p 5000:5000 aceest-app  
 
+## CI/CD Pipeline
 
-pip install -r requirements.txt
+GitHub Actions automatically:
+- Installs dependencies
+- Runs pytest
+- Builds Docker image
 
+## Jenkins Integration
 
+Jenkins was configured to validate the build process by:
 
-Run the application:
+- Pulling code from GitHub repository
+- Executing build steps
+- Building Docker image
 
-
-
-python app.py
-
-
-
-Open in browser:
-
-
-
-http://localhost:5000
-
-
-
-\## Running Tests
-
-
-
-pytest
-
-
-
-\## Docker Build
-
-
-
-docker build -t aceest-app .
-
-
-
-Run container:
-
-
-
-docker run -p 5000:5000 aceest-app
-
-
-
-\## CI/CD
-
-
-
-CI pipeline is implemented using GitHub Actions which automatically runs tests when code is pushed to the main branch.
-
+Jenkins acts as a secondary quality gate to ensure code stability and integration.
