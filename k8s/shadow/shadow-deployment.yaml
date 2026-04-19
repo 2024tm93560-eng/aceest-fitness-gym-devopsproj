@@ -1,0 +1,131 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Shadow Deployment - ACEest Fitness
+# Strategy: Mirror/duplicate all live traffic to the shadow (new) version
+#           without affecting real users. Shadow responses are discarded.
+# Requires: Istio or NGINX mirroring support.
+# Rollback: Simply stop traffic mirroring to shadow.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Production Deployment ─────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-production
+  namespace: aceest
+  labels:
+    app: aceest-fitness
+    env: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      env: production
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        env: production
+    spec:
+      containers:
+        - name: aceest-fitness
+          image: your-dockerhub-username/aceest-fitness:stable
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# ── Shadow Deployment ─────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-shadow
+  namespace: aceest
+  labels:
+    app: aceest-fitness
+    env: shadow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      env: shadow
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        env: shadow
+    spec:
+      containers:
+        - name: aceest-fitness
+          image: your-dockerhub-username/aceest-fitness:latest
+          ports:
+            - containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# ── Production Service ────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-production-svc
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    env: production
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: LoadBalancer
+
+---
+# ── Shadow Service (receives mirrored traffic) ────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-shadow-svc
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    env: shadow
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: ClusterIP
+
+---
+# ── Istio VirtualService — mirrors 100% traffic to shadow ────────────────────
+# Requires Istio service mesh installed in cluster.
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: aceest-shadow-mirror
+  namespace: aceest
+spec:
+  hosts:
+    - aceest-production-svc
+  http:
+    - route:
+        - destination:
+            host: aceest-production-svc
+            port:
+              number: 80
+          weight: 100
+      mirror:
+        host: aceest-shadow-svc
+        port:
+          number: 80
+      mirrorPercentage:
+        value: 100.0      # Mirror 100% of requests to shadow (discarded)

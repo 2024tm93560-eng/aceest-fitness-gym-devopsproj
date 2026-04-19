@@ -1,0 +1,51 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Namespace setup for ACEest Fitness Deployments
+# Apply this first: kubectl apply -f namespace.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aceest
+  labels:
+    project: aceest-fitness
+    managed-by: jenkins
+
+---
+# ── ConfigMap for shared app config ──────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aceest-config
+  namespace: aceest
+data:
+  FLASK_ENV: "production"
+  PORT: "5000"
+  LOG_LEVEL: "INFO"
+
+---
+# ── HorizontalPodAutoscaler ───────────────────────────────────────────────────
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aceest-hpa
+  namespace: aceest
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aceest-fitness
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

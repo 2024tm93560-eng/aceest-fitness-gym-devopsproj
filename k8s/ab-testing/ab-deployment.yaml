@@ -1,0 +1,138 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# A/B Testing Deployment - ACEest Fitness
+# Strategy: Route specific users (e.g., by header or cookie) to version A or B.
+# Use Case: Testing new BMI dashboard UI (Version B) vs existing (Version A).
+# Requires: Istio or NGINX Ingress with header-based routing.
+# Rollback: Remove header-based routing rule, route all to Version A.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Version A (Control Group) ─────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-version-a
+  namespace: aceest
+  labels:
+    app: aceest-fitness
+    version: "A"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      version: "A"
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        version: "A"
+    spec:
+      containers:
+        - name: aceest-fitness
+          image: your-dockerhub-username/aceest-fitness:v1.0.0
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_VERSION
+              value: "A"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# ── Version B (Experiment Group) ─────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-version-b
+  namespace: aceest
+  labels:
+    app: aceest-fitness
+    version: "B"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      version: "B"
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        version: "B"
+    spec:
+      containers:
+        - name: aceest-fitness
+          image: your-dockerhub-username/aceest-fitness:v2.0.0
+          ports:
+            - containerPort: 5000
+          env:
+            - name: APP_VERSION
+              value: "B"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+# ── Service A ────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service-a
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    version: "A"
+  ports:
+    - port: 80
+      targetPort: 5000
+
+---
+# ── Service B ────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-service-b
+  namespace: aceest
+spec:
+  selector:
+    app: aceest-fitness
+    version: "B"
+  ports:
+    - port: 80
+      targetPort: 5000
+
+---
+# ── Istio VirtualService — header-based routing ───────────────────────────────
+# Users with header 'X-User-Group: beta' → Version B
+# All others → Version A
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: aceest-ab-routing
+  namespace: aceest
+spec:
+  hosts:
+    - aceest-fitness.aceest.svc.cluster.local
+  http:
+    - match:
+        - headers:
+            x-user-group:
+              exact: beta          # Beta users → Version B
+      route:
+        - destination:
+            host: aceest-service-b
+            port:
+              number: 80
+    - route:
+        - destination:
+            host: aceest-service-a  # Everyone else → Version A
+            port:
+              number: 80

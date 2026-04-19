@@ -1,0 +1,104 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Docker Compose for local development and testing
+# Usage:
+#   docker compose up -d                  # Start all services
+#   docker compose -f docker-compose.yml up sonarqube  # Start SonarQube only
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── ACEest Flask App (v1) ─────────────────────────────────────────────────
+  aceest-v1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aceest-fitness:v1.0.0
+    container_name: aceest-v1
+    ports:
+      - "5001:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=ACEest_Fitness.py
+    volumes:
+      - ./app:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - aceest-net
+
+  # ── ACEest Flask App (v2) ─────────────────────────────────────────────────
+  aceest-v2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aceest-fitness:v2.0.0
+    container_name: aceest-v2
+    ports:
+      - "5002:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=ACEest_Fitness_v2.py
+    volumes:
+      - ./app:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - aceest-net
+
+  # ── Jenkins ───────────────────────────────────────────────────────────────
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - aceest-net
+
+  # ── SonarQube ─────────────────────────────────────────────────────────────
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - aceest-net
+
+  # ── SonarQube PostgreSQL DB ───────────────────────────────────────────────
+  sonar-db:
+    image: postgres:15
+    container_name: sonar-db
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonar_db:/var/lib/postgresql/data
+    networks:
+      - aceest-net
+
+networks:
+  aceest-net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_logs:
+  sonar_db:

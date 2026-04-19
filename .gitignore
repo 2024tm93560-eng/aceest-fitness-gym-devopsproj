@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+reports/
+*.egg-info/
+dist/
+build/
+.coverage
+.pytest_cache/
+.sonar/
+node_modules/
