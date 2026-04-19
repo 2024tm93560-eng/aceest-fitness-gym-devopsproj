@@ -70,9 +70,9 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/aceest-fitness:v1.0.0
             ${{ secrets.DOCKERHUB_USERNAME }}/aceest-fitness:${{ steps.vars.outputs.SHA_SHORT }}
 
-  # Job 3: SonarQube Analysis
-  sonarqube:
-    name: SonarQube Analysis
+  # Job 3: SonarCloud Analysis
+  sonarcloud:
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main'
@@ -88,23 +88,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Generate coverage for SonarQube
+      - name: Generate coverage
         run: |
           pip install -r requirements.txt pytest-cov
           pytest tests/ --cov=. --cov-report=xml -v
         env:
           PYTHONPATH: ${{ github.workspace }}
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=aceest-fitness-gym
-            -Dsonar.projectName=aceest-fitness-gym
-            -Dsonar.sources=.
-            -Dsonar.tests=tests
-            -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.exclusions=**/__pycache__/**,**/*.pyc,venv/**,versions/**
