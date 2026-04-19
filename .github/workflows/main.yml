@@ -100,3 +100,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=aceest-fitness-gym-devopsproj
+            -Dsonar.organization=2024tm93560-eng
+            -Dsonar.projectName=ACEest-Fitness-Gym
+            -Dsonar.projectVersion=2.0.0
+            -Dsonar.sources=.
+            -Dsonar.tests=tests
+            -Dsonar.language=py
+            -Dsonar.python.version=3.11
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.exclusions=**/__pycache__/**,**/*.pyc,venv/**,versions/**
