@@ -132,7 +132,6 @@ class TestMemberManagement:
 
     def test_update_member(self, client):
         post_json(client, "/members", {"name": "Old Name", "email": "upd@aceest.com"})
-        res = post_json.__func__(post_json, client, "/members/1", None)  # use PUT
         res = client.put("/members/1",
                          data=json.dumps({"name": "New Name"}),
                          content_type="application/json")
