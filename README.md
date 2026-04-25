@@ -98,3 +98,4 @@ minikube service aceest-service -n aceest --url
 - SONAR_TOKEN
 - SONAR_HOST_URL
  
+ 
