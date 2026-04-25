@@ -97,3 +97,4 @@ minikube service aceest-service -n aceest --url
 - DOCKERHUB_TOKEN
 - SONAR_TOKEN
 - SONAR_HOST_URL
+ 
