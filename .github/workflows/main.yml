@@ -69,7 +69,22 @@ jobs:
           pytest tests/ --cov=. --cov-report=xml -v
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - uses: SonarSource/sonarcloud-github-action@v3
+      - name: Remove sonar-project.properties if exists
+        run: rm -f sonar-project.properties
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=aceest-fitness-gym-devopsproj
+            -Dsonar.organization=2024tm93560-eng
+            -Dsonar.projectName=ACEest-Fitness-Gym
+            -Dsonar.projectVersion=2.0.0
+            -Dsonar.sources=ACEest_Fitness.py,ACEest_Fitness_v2.py,app.py
+            -Dsonar.tests=tests
+            -Dsonar.test.inclusions=tests/test_aceest.py
+            -Dsonar.language=py
+            -Dsonar.python.version=3.11
+            -Dsonar.python.coverage.reportPaths=coverage.xml
