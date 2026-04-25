@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: aceest-fitness
-          image: your-dockerhub-username/aceest-fitness:stable
+          image: chithra93560/aceest-fitness:stable
           ports:
             - containerPort: 5000
           readinessProbe:
@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
         - name: aceest-fitness
-          image: your-dockerhub-username/aceest-fitness:latest
+          image: chithra93560/aceest-fitness:latest
           ports:
             - containerPort: 5000
           readinessProbe:

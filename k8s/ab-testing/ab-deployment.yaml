@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: aceest-fitness
-          image: your-dockerhub-username/aceest-fitness:v1.0.0
+          image: chithra93560/aceest-fitness:v1.0.0
           ports:
             - containerPort: 5000
           env:
@@ -66,7 +66,7 @@ spec:
     spec:
       containers:
         - name: aceest-fitness
-          image: your-dockerhub-username/aceest-fitness:v2.0.0
+          image: chithra93560/aceest-fitness:v2.0.0
           ports:
             - containerPort: 5000
           env:
